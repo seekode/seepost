@@ -36,6 +36,22 @@
           </button>
         </div>
 
+        <!-- Mode Livraison Express : verrouillé tant que les 40 exercices ne sont pas terminés -->
+        <button
+          id="btn-accueil-express"
+          class="btn btn-express verrouille"
+          type="button"
+          aria-disabled="true"
+          aria-describedby="accueil-express-statut"
+        >
+          <span class="express-icone" aria-hidden="true">&#9889;</span>
+          <span class="express-textes">
+            <strong>Livraison Express</strong>
+            <small id="accueil-express-statut"></small>
+          </span>
+          <span id="accueil-express-cadenas" class="express-cadenas" aria-hidden="true">&#128274;</span>
+        </button>
+
         <div id="accueil-progression" class="accueil-progression" hidden>
           <span id="accueil-progression-texte"></span>
           <button id="btn-reinitialiser-progression" class="btn-lien" type="button">
@@ -67,22 +83,40 @@
         </div>
 
         <div class="hud-centre">
-          <div class="hud-progression-wrap" title="Progression du Mode Histoire">
+          <div class="hud-progression-wrap hud-story-only" title="Progression du Mode Histoire">
             <div class="hud-progression-piste">
               <div id="hud-progression-barre" class="hud-progression-barre"></div>
             </div>
             <span id="hud-progression-label" class="hud-progression-label">0 / 40</span>
           </div>
+
+          <!-- HUD du mode Livraison Express (compte à rebours bien visible) -->
+          <div id="express-hud" class="express-hud" hidden>
+            <div id="express-chrono" class="express-chrono" role="timer" aria-label="Temps restant">5:00</div>
+            <div class="express-stat">
+              <span>Livrés</span>
+              <strong id="express-livres">0</strong>
+            </div>
+            <div class="express-stat express-stat-erreurs">
+              <span>Erreurs</span>
+              <strong id="express-erreurs">0</strong>
+            </div>
+            <div class="express-stat express-stat-record">
+              <span>Record</span>
+              <strong id="express-record">0</strong>
+            </div>
+            <span id="express-penalite" class="express-penalite" aria-hidden="true"></span>
+          </div>
         </div>
 
         <div class="hud-droite">
-          <button id="btn-niveau-precedent" class="btn btn-hud" type="button" title="Exercice précédent">
+          <button id="btn-niveau-precedent" class="btn btn-hud hud-story-only" type="button" title="Exercice précédent">
             &#9664;
           </button>
-          <button id="btn-ouvrir-niveaux" class="btn btn-hud" type="button">
+          <button id="btn-ouvrir-niveaux" class="btn btn-hud hud-story-only" type="button">
             Niveaux
           </button>
-          <button id="btn-niveau-suivant" class="btn btn-hud" type="button" title="Exercice suivant">
+          <button id="btn-niveau-suivant" class="btn btn-hud hud-story-only" type="button" title="Exercice suivant">
             &#9654;
           </button>
           <button id="btn-plein-ecran" class="btn btn-hud" type="button" title="Plein écran (F11)">
@@ -90,6 +124,11 @@
           </button>
         </div>
       </header>
+
+      <!-- Barre de temps restant (mode Livraison Express uniquement) -->
+      <div class="express-barre-temps" aria-hidden="true">
+        <div id="express-barre-remplissage" class="express-barre-remplissage"></div>
+      </div>
 
       <!-- PARTIE HAUTE : ZONE DE JEU (ATELIER à gauche + ESPACE CLIENT à droite) -->
       <main id="zone-de-jeu" class="zone-de-jeu">
@@ -288,6 +327,55 @@
         <div class="victoire-actions">
           <button id="btn-rejouer-niveau" class="btn btn-secondaire" type="button">Rester ici</button>
           <button id="btn-continuer-suivant" class="btn btn-principal" type="button">Exercice suivant &#10140;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODALE LIVRAISON EXPRESS : règles + démarrage -->
+    <div id="modale-express-intro" class="modale-fond" hidden role="dialog" aria-modal="true" aria-labelledby="express-intro-titre">
+      <div class="modale-carte modale-express">
+        <div class="modale-entete">
+          <h2 id="express-intro-titre">&#9889; Livraison Express</h2>
+          <button id="btn-fermer-express-intro" class="btn-fermer" type="button" aria-label="Fermer">&times;</button>
+        </div>
+        <div class="modale-corps">
+          <p class="express-intro-texte">
+            Léo a besoin de renfort : livre un maximum de colis avant la fin du chrono !
+          </p>
+          <ul class="express-regles">
+            <li>Tu as <strong id="express-regle-duree">5 minutes</strong> pour livrer le plus de colis possible.</li>
+            <li>Chaque colis livré déclenche aussitôt un nouvel exercice, tiré au hasard parmi tout ce que tu as appris.</li>
+            <li>Une mauvaise réponse ne te fait pas perdre la partie, mais elle te coûte <strong id="express-regle-penalite">10 secondes</strong>.</li>
+            <li>Les exercices deviennent de plus en plus difficiles au fil des livraisons.</li>
+          </ul>
+          <div class="express-record-bloc">
+            <span>Meilleur score</span>
+            <strong id="express-intro-record">—</strong>
+          </div>
+          <div class="victoire-actions">
+            <button id="btn-express-demarrer" class="btn btn-principal btn-grand" type="button">
+              Démarrer le chrono
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODALE LIVRAISON EXPRESS : bilan de fin de partie -->
+    <div id="modale-express-bilan" class="modale-fond" hidden role="dialog" aria-modal="true" aria-labelledby="express-bilan-titre">
+      <div class="modale-carte modale-victoire modale-express-bilan">
+        <div class="victoire-icone" aria-hidden="true">&#9201;</div>
+        <h2 id="express-bilan-titre">Temps écoulé !</h2>
+        <p id="express-bilan-badge" class="express-badge-record" hidden>&#127942; Nouveau record !</p>
+        <div class="express-bilan-grille">
+          <div><strong id="express-bilan-livres">0</strong><span>colis livrés</span></div>
+          <div><strong id="express-bilan-erreurs">0</strong><span>erreurs</span></div>
+          <div><strong id="express-bilan-record">0</strong><span>meilleur score</span></div>
+        </div>
+        <p id="express-bilan-message" class="victoire-message"></p>
+        <div class="victoire-actions">
+          <button id="btn-express-accueil" class="btn btn-secondaire" type="button">Accueil</button>
+          <button id="btn-express-rejouer" class="btn btn-principal" type="button">Rejouer</button>
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import './styles/main.css';
 import './styles/workshop.css';
 import './styles/editor.css';
+import './styles/express.css';
 
 import { CHAPTERS } from './data/chapters.js';
 import { LEVELS, getLevelById } from './data/levels.js';
@@ -17,6 +18,7 @@ import {
 } from './ui/animations.js';
 import { EditorController } from './ui/editorController.js';
 import { ModalManager } from './ui/levelModal.js';
+import { ExpressController } from './ui/expressController.js';
 
 class AtelierComptoirApp {
   constructor() {
@@ -72,13 +74,41 @@ class AtelierComptoirApp {
     });
 
     this.editor = new EditorController({
-      onRun: (code) => this.handleExecuteCode(code),
-      onCodeChange: (code) => this.scheduleLiveAnalysis(code),
-      onShowSolution: () => this.handleShowSolution(),
+      onRun: (code) => (this.express.inGame ? this.express.handleRun(code) : this.handleExecuteCode(code)),
+      onCodeChange: (code) => {
+        if (!this.express.inGame) this.scheduleLiveAnalysis(code);
+      },
+      onShowSolution: () => {
+        if (!this.express.inGame) this.handleShowSolution();
+      },
       onOpenMemento: () => this.modals.openMemento()
     });
 
+    // Mode Livraison Express : réutilise scène, éditeur, runner, validateur et animations
+    this.express = new ExpressController({
+      scene: this.scene,
+      editor: this.editor,
+      getProgress: () => this.progress,
+      onEnter: () => this.prepareExpressScreen(),
+      onGoHome: () => this.goHome()
+    });
+
     this.bindEvents();
+    this.updateHomeScreen();
+  }
+
+  /** Coupe toute activité du Mode Histoire avant d'afficher l'écran de jeu en mode Express. */
+  prepareExpressScreen() {
+    this.runToken++;
+    clearTimeout(this.liveState.timer);
+    this.liveState.levelWon = true;
+    this.liveState.deliveryQueue = [];
+    this.showGameScreen();
+  }
+
+  goHome() {
+    this.elEcranJeu.hidden = true;
+    this.elEcranAccueil.hidden = false;
     this.updateHomeScreen();
   }
 
@@ -100,9 +130,9 @@ class AtelierComptoirApp {
     });
 
     this.btnMenu.addEventListener('click', () => {
-      this.elEcranJeu.hidden = true;
-      this.elEcranAccueil.hidden = false;
-      this.updateHomeScreen();
+      if (!this.express.confirmLeave()) return;
+      this.express.leave();
+      this.goHome();
     });
 
     this.btnOuvrirNiveaux.addEventListener('click', () => {
@@ -134,6 +164,7 @@ class AtelierComptoirApp {
       this.btnCommencer.textContent = 'Commencer';
       this.elAccueilProg.hidden = true;
     }
+    this.express.refreshHomeEntry();
   }
 
   showGameScreen() {
@@ -179,7 +210,7 @@ class AtelierComptoirApp {
 
   async runLiveAnalysis(code) {
     const level = this.currentLevel;
-    if (!level || this.liveState.levelWon) return;
+    if (!level || this.liveState.levelWon || this.express.inGame) return;
     if (level.mechanic !== 'variables' && level.mechanic !== 'conditions') return;
 
     const live = analyzeLiveCode(level, code);

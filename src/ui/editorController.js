@@ -236,7 +236,7 @@ export class EditorController {
     this.objectiveEl.textContent = level.objective || '';
     this.clearConsole();
     this.setStatus('Prêt', 'idle');
-    this.logInfo(`Exercice ${level.id} : ${level.objective}`);
+    this.logInfo(`${level.express ? 'Colis n°' : 'Exercice '}${level.id} : ${level.objective}`);
     this.textarea.focus();
     this.textarea.selectionStart = this.textarea.selectionEnd = this.textarea.value.length;
   }

@@ -54,6 +54,20 @@ Toutes les notions suivent une **syntaxe de base stricte** pour ne jamais surcha
 
 ---
 
+---
+
+## Mode Livraison Express (bonus)
+
+Débloqué **uniquement après avoir réussi les 40 exercices** du Mode Histoire (entrée verrouillée sur l'accueil, avec la progression `x / 40`).
+
+- **5 minutes** pour livrer un maximum de colis (durée modifiable dans `EXPRESS_CONFIG.durationMs`, `src/engine/expressSession.js`).
+- Chaque livraison réussie déclenche un **nouvel exercice aléatoire** (variables, conditions, boucles, fonctions, DOM) dont les valeurs et objectifs varient ; jamais deux fois le même gabarit de suite.
+- Une **mauvaise réponse** coûte 10 secondes (`penaltyMs`) mais ne termine pas la partie. Le chrono est figé pendant l'animation de livraison.
+- **Difficulté progressive** par paliers : Échauffement (0 colis), Rythme de croisière (3), Coup de feu (6), Maître livreur (10).
+- **Bilan** de fin de partie (colis livrés, erreurs, meilleur score) ; le record est sauvegardé dans une clé `localStorage` séparée (`atelier_comptoir_express_v1`) : la sauvegarde du Mode Histoire n'est jamais modifiée.
+
+Le mode réutilise tel quel `runner.js`, `validator.js`, la scène, l'éditeur et les animations : le générateur (`src/data/expressExercises.js`) produit des « niveaux » au même format que ceux de l'Histoire.
+
 ## Architecture du projet
 
 ```text
@@ -68,9 +82,11 @@ Toutes les notions suivent une **syntaxe de base stricte** pour ne jamais surcha
 │   │   ├── levels-ch3.js        # Exercices 20 à 27 (for)
 │   │   ├── levels-ch4.js        # Exercices 28 à 33 (function)
 │   │   ├── levels-ch5.js        # Exercices 34 à 40 (DOM id + appendChild)
-│   │   └── levels.js            # Liste complète des 40 niveaux
+│   │   ├── levels.js            # Liste complète des 40 niveaux
+│   │   └── expressExercises.js  # Générateur d'exercices aléatoires (Livraison Express)
 │   ├── engine/
-│   │   ├── storage.js           # Sauvegarde automatique localStorage
+│   │   ├── storage.js           # Sauvegarde automatique localStorage (+ record Express, déverrouillage)
+│   │   ├── expressSession.js    # Chrono, pénalités et compteurs d'une partie Express
 │   │   ├── syntaxRules.js       # Règles strictes débutant, garde anti-boucle infinie, instrumentation
 │   │   ├── errorTranslator.js   # Traduction claire des erreurs JS en français
 │   │   ├── runner.js            # Exécution isolée (try/catch) par mécanique
@@ -80,13 +96,16 @@ Toutes les notions suivent une **syntaxe de base stricte** pour ne jamais surcha
 │   │   ├── sceneRenderer.js     # Rendu de l'atelier, du comptoir et des vrais éléments DOM
 │   │   ├── animations.js        # Animations fluides des colis, postes et livraisons
 │   │   ├── editorController.js  # Éditeur intégré (numéros de ligne, Tab, Ctrl+Entrée)
-│   │   └── levelModal.js        # Sélecteur de niveaux, mémento et modale de victoire
+│   │   ├── levelModal.js        # Sélecteur de niveaux, mémento et modale de victoire
+│   │   └── expressController.js # Interface et déroulement du mode Livraison Express
 │   └── styles/
 │       ├── main.css             # Thème, menu d'accueil, barre HUD, modales
 │       ├── workshop.css         # Scène de jeu (Atelier, 3 postes, Léo, Espace client)
-│       └── editor.css           # Zone de code & journal d'exécution
+│       ├── editor.css           # Zone de code & journal d'exécution
+│       └── express.css          # Entrée de menu, HUD chronométré et modales Express
 └── tests/
-    └── curriculum.test.js       # Tests automatisés vérifiant les 40 exercices et leurs corrigés
+    ├── curriculum.test.js       # Tests automatisés vérifiant les 40 exercices et leurs corrigés
+    └── express.test.js          # Tests du générateur, du chrono, du record et du déverrouillage
 ```
 
 ## Licence

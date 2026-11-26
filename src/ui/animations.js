@@ -17,8 +17,18 @@ const THANK_YOU_PHRASES = [
   'Génial, bonne journée !'
 ];
 
+/**
+ * Facteur de vitesse global des animations (1 = Mode Histoire).
+ * Le mode Livraison Express l'augmente pour que les livraisons restent vives.
+ */
+let animationSpeed = 1;
+
+export function setAnimationSpeed(factor = 1) {
+  animationSpeed = Number.isFinite(factor) && factor > 0 ? factor : 1;
+}
+
 function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms / animationSpeed));
 }
 
 function getGameArea(scene) {
@@ -113,7 +123,7 @@ class WalkingActor {
 
     const duration = Math.round(Math.max(minMs, Math.min(maxMs, (dist / speedPxPerSec) * 1000)));
     this.root.classList.add('en-marche');
-    this.root.style.transition = `transform ${duration}ms cubic-bezier(0.42, 0.04, 0.58, 0.96)`;
+    this.root.style.transition = `transform ${Math.round(duration / animationSpeed)}ms cubic-bezier(0.42, 0.04, 0.58, 0.96)`;
 
     // Force reflow pour que la transition démarre proprement
     void this.root.offsetWidth;
